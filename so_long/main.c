@@ -6,7 +6,7 @@
 /*   By: rtektas <resultektas.idb@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/03 17:40:37 by rtektas           #+#    #+#             */
-/*   Updated: 2024/10/03 17:40:40 by rtektas          ###   ########.fr       */
+/*   Updated: 2024/10/06 13:48:46 by rtektas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ void	open_windows(t_win *pnc, char *path)
 	char_control(pnc);
 	if (!go_nuts(pnc))
 	{
-		write(1, "Error: The map is not playable.", 31);
+		write(1, "Error\nThe map is not playable.", 30);
 		close_frame(pnc);
 	}
 }
@@ -102,7 +102,7 @@ int	main(int argc, char **argv)
 	}
 	else
 	{
-		write(1, "missing argument", 17);
+		write(1, "Error\nmissing argument", 22);
 	}
 	return (0);
 }

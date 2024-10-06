@@ -6,7 +6,7 @@
 /*   By: rtektas <resultektas.idb@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/03 17:40:29 by rtektas           #+#    #+#             */
-/*   Updated: 2024/10/03 17:42:16 by rtektas          ###   ########.fr       */
+/*   Updated: 2024/10/06 13:47:17 by rtektas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ void	xpm_control(void)
 	fd_coin = open("./img/coin.xpm", O_RDWR);
 	if (fd_back <= 0 || fd_bg <= 0 || fd_block <= 0 || fd_coin <= 0)
 	{
-		write(1, "Missing XPM File\n", 18);
+		write(1, "Error\nMissing XPM File", 22);
 		close(fd_back);
 		close(fd_bg);
 		close(fd_block);
@@ -51,7 +51,7 @@ void	xpm_control_two(void)
 	fd_right = open("./img/right_char.xpm", O_RDWR);
 	if (fd_endgate <= 0 || fd_front <= 0 || fd_left <= 0 || fd_right <= 0)
 	{
-		write(1, "Missing XPM File\n", 18);
+		write(1, "Error\nMissing XPM File", 22);
 		close(fd_endgate);
 		close(fd_front);
 		close(fd_left);
@@ -72,7 +72,7 @@ void	path_checker(char *path)
 	if (path[len - 1] != 'r' || path[len - 2] != 'e'
 		|| path[len - 3] != 'b' || path[len - 4] != '.')
 	{
-		write(1, "Wrong File Extension", 21);
+		write(1, "Error\nWrong File Extension", 26);
 		exit(1);
 	}
 }

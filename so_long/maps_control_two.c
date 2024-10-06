@@ -6,7 +6,7 @@
 /*   By: rtektas <resultektas.idb@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/03 17:40:24 by rtektas           #+#    #+#             */
-/*   Updated: 2024/10/03 17:40:25 by rtektas          ###   ########.fr       */
+/*   Updated: 2024/10/06 13:46:16 by rtektas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ void	endln_control(char line)
 {
 	if (line == '\n')
 	{
-		write(1, "Error\n Empty Line In Map", 24);
+		write(1, "Error\nEmpty Line In Map", 24);
 		exit(1);
 	}
 }
@@ -40,7 +40,7 @@ void	coin_control(t_win *pnc)
 	}
 	if (pnc->map->coin_cnt <= 0)
 	{
-		write(1, "Not Found Coin in Map", 22);
+		write(1, "Error\nNot Found Coin in Map", 27);
 		close_frame(pnc);
 	}
 }
@@ -52,7 +52,7 @@ void	file_control(char *path)
 	fd = open(path, O_RDWR);
 	if (fd <= 0)
 	{
-		write(1, "Wrong File Path", 16);
+		write(1, "Error\nWrong File Path", 21);
 		close(fd);
 		exit(1);
 	}
@@ -75,7 +75,7 @@ void	char_control(t_win *pnc)
 				&& pnc->map->mappin[i][j] != 'C'
 				&& pnc->map->mappin[i][j] != 'E')
 			{
-				write(1, "Undefined Char", 15);
+				write(1, "Error\nUndefined Char", 20);
 				close_frame(pnc);
 			}
 		}
