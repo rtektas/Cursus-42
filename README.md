@@ -4,6 +4,7 @@ Welcome to my repository containing all the projects I completed during my journ
 .
 Each project focuses on improving problem-solving, logic, and coding skills through hands-on challenges in C programming, algorithms, and system development.
 
+
 📁 **Contents**
 | Level | Project | Description | Main Topics |
 |--------|----------|--------------|--------------|
@@ -44,6 +45,7 @@ Each project focuses on improving problem-solving, logic, and coding skills thro
 
 42 is a tuition-free programming school with a peer-to-peer learning model, emphasizing autonomy, creativity, and project-based learning.
 Learn more at 👉 https://42.fr/en/homepage/
+
 
 📬 **Contact**
 
