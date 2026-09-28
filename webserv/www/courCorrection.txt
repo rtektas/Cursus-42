@@ -1,0 +1,157 @@
+==================================================================
+  COURS : Pourquoi l'upload depuis la page web ne marchait pas
+          et comment ça a été corrigé
+==================================================================
+
+------------------------------------------------------------------
+1. LE PROBLEME
+------------------------------------------------------------------
+
+Quand on envoie un fichier depuis un navigateur vers un serveur HTTP,
+il faut que les DEUX cotés (client ET serveur) soient d'accord sur
+le FORMAT du corps (body) de la requete POST.
+
+Avant la correction, js/files.js (fonction uploadFile) faisait ceci :
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+    xhr.setRequestHeader('X-Filename', file.name);
+    xhr.send(file);
+
+=> Il envoyait le fichier "tout nu" (les octets bruts) avec :
+   - Content-Type: application/octet-stream
+   - un header maison X-Filename: nom_du_fichier
+
+Mais le serveur webserv (cote C++, fichier
+srcs/c_response/build_upload.cpp + parse_CT_response.cpp) ne sait
+lire QUE le format "multipart/form-data". Il fait :
+
+   if (strncasecmp(TYPE.c_str(), "multipart/form-data", 19) != 0)
+       return BUILD_STATE::BUILD_FATAL_ERR;   // -> erreur 400
+
+Resultat : le serveur recevait du "application/octet-stream",
+voyait que ce n'etait pas du "multipart/form-data", et repondait
+une erreur 400 Bad Request. L'upload depuis la page web ne
+fonctionnait donc JAMAIS, meme si le fichier etait bien envoye.
+
+(Le test avec curl en ligne de commande, lui, fonctionnait car il
+utilisait le bon format multipart/form-data — d'ou le decalage.)
+
+
+------------------------------------------------------------------
+2. C'EST QUOI "multipart/form-data" ?
+------------------------------------------------------------------
+
+C'est le format standard utilise par les formulaires HTML pour
+envoyer des fichiers. Le corps de la requete ressemble a ca :
+
+----------------------------------------
+--BOUNDARY123
+Content-Disposition: form-data; name="file"; filename="photo.png"
+Content-Type: image/png
+
+<...octets bruts du fichier...>
+--BOUNDARY123--
+----------------------------------------
+
+Et le header HTTP envoye est :
+
+    Content-Type: multipart/form-data; boundary=BOUNDARY123
+
+Le "boundary" est une chaine separatrice unique qui delimite le
+debut/la fin de chaque "partie" du formulaire. Le serveur s'en sert
+pour retrouver :
+  - le nom du fichier  -> "filename=..."
+  - le contenu du fichier -> tout ce qui est entre la ligne vide
+    (\r\n\r\n) et le boundary suivant.
+
+C'est exactement ce que lit srcs/c_response/build_upload.cpp.
+
+
+------------------------------------------------------------------
+3. LA CORRECTION
+------------------------------------------------------------------
+
+Dans le navigateur, il existe un objet tout fait pour générer ce
+format automatiquement : FormData.
+
+AVANT :
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+    xhr.setRequestHeader('X-Filename', file.name);
+    ...
+    xhr.send(file);
+
+APRES :
+    var formData = new FormData();
+    formData.append('file', file, file.name);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    /* On NE met PAS de Content-Type a la main : le navigateur
+       calcule lui-meme un boundary unique et ajoute
+       "multipart/form-data; boundary=..." automatiquement. */
+    ...
+    xhr.send(formData);
+
+Points importants :
+  - formData.append('file', file, file.name) cree automatiquement
+    une partie avec le bon header :
+       Content-Disposition: form-data; name="file"; filename="..."
+  - On a SUPPRIME les deux setRequestHeader() :
+       * Content-Type: application/octet-stream  -> faux format
+       * X-Filename                              -> jamais lu par
+                                                      le serveur,
+                                                      inutile
+  - xhr.send(file)  ->  xhr.send(formData)
+
+
+------------------------------------------------------------------
+4. POURQUOI CA MARCHE MAINTENANT
+------------------------------------------------------------------
+
+1. Le navigateur envoie :
+     Content-Type: multipart/form-data; boundary=----xxxxxxxx
+
+2. parse_CT_response.cpp voit "multipart/form-data" -> OK, il
+   recupere le boundary.
+
+3. build_upload.cpp cherche "Content-Disposition:" puis
+   "filename=" dans le corps -> il trouve le nom du fichier
+   (envoye automatiquement par FormData).
+
+4. Il ecrit le contenu (entre la ligne vide et le boundary final)
+   dans www/upload/<nom_du_fichier>.
+
+5. Reponse : 201 Created si tout va bien, 409 si le fichier existe
+   deja, 400/403/500 selon les erreurs.
+
+
+------------------------------------------------------------------
+5. TEST EFFECTUE
+------------------------------------------------------------------
+
+- Page "Fichiers" -> selection d'un fichier -> "Envoyer au serveur"
+  -> reponse "✅ HTTP 201 Created" + fichier present dans
+  www/upload/.
+- Re-upload du meme fichier -> "🔴 HTTP 409 Conflict" (normal,
+  le fichier existe deja).
+
+
+------------------------------------------------------------------
+6. A NOTER (bug separe, pas corrige ici)
+------------------------------------------------------------------
+
+En testant l'ANCIEN format (octet-stream + X-Filename) contre le
+vrai binaire ./webserv, le serveur PLANTE completement avec :
+
+    [ERROR] webserv: basic_string::append: __pos (which is 65)
+            > this->size() (which is 17)
+
+C'est une exception C++ non rattrapee dans le parsing du body de
+/upload : une requete POST mal formee suffit a faire crasher TOUT
+le serveur (deni de service). Ce bug est independant du fix
+JavaScript ci-dessus et reste a corriger cote C++
+(srcs/c_response/build_upload.cpp / process_headers.cpp).

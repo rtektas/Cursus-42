@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhenixGinx — Lab</title>
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<div id="embers"></div>
+<div id="reconnect-notice">⏰ Session expirée par inactivité — votre progression a été sauvegardée</div>
+
+<!-- ════════════ LOGIN ════════════ -->
+<div id="login-ov">
+  <div class="lbox">
+    <div class="fire-icon">🔥</div>
+    <h2>PHENIXGINX LAB</h2>
+    <p>Plateforme de test — Projet WebServ 42</p>
+    <div class="lfield">
+      <label>Utilisateur</label>
+      <input type="text" id="lu" placeholder="admin" autocomplete="off">
+    </div>
+    <div class="lfield">
+      <label>Mot de passe</label>
+      <input type="password" id="lp" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="lbtn" onclick="doLogin()">Se connecter</button>
+    <div class="lerr" id="lerr"></div>
+    <div style="margin-top:1rem">
+      <button class="llink" onclick="toggleReg()">Créer un compte</button>
+    </div>
+    <div id="reg-sec" style="display:none;margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--brd)">
+      <div class="lfield">
+        <label>Confirmer le mot de passe</label>
+        <input type="password" id="lp2" placeholder="••••••">
+      </div>
+      <button class="lbtn-sec" onclick="doRegister()">Créer le compte</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ APP ════════════ -->
+<div id="app">
+  <div class="topbar">
+    <span class="logo">🔥 PhenixGinx</span>
+    <button class="tbtn act" id="tb0" onclick="switchTab(0)"><span class="ti">⚡</span>DoS</button>
+    <button class="tbtn"     id="tb1" onclick="switchTab(1)"><span class="ti">📡</span>Réseau</button>
+    <button class="tbtn"     id="tb2" onclick="switchTab(2)"><span class="ti">💉</span>Injection</button>
+    <button class="tbtn"     id="tb4" onclick="switchTab(4)"><span class="ti">🔑</span>SSH</button>
+    <button class="tbtn"     id="tb3" onclick="switchTab(3)"><span class="ti">🏓</span>Pong</button>
+    <button class="tbtn"     id="tb5" onclick="switchTab(5)"><span class="ti">📐</span>Math</button>
+    <button class="tbtn"     id="tb6" onclick="switchTab(6)"><span class="ti">📁</span>Fichiers</button>
+    <button class="tbtn split-btn" id="tbs" onclick="toggleSplit()">⊞ Tout voir</button>
+    <div class="usr-area">
+      <span class="sess-badge" id="sess-timer"></span>
+      <span class="user-pill"  id="uname"></span>
+      <button class="exit-btn" onclick="logout()">Quitter</button>
+    </div>
+  </div>
+
+  <div class="persp">
+
+  <!-- ═══ DoS ═══ -->
+  <div class="section s-active" id="sec0">
+    <div class="si">
+      <div class="page-title" style="color:var(--red)">⚡ Attaque DoS</div>
+
+      <div class="stats-row cols-4" id="dos-stats-row">
+        <div class="stat-card"><div class="stat-val" style="color:var(--red)" id="d-rps">0</div><div class="stat-lbl">Req / sec</div></div>
+        <div class="stat-card"><div class="stat-val" id="d-tot">0</div><div class="stat-lbl">Total</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--red)" id="d-err">0</div><div class="stat-lbl">Erreurs</div></div>
+        <div class="stat-card"><div class="stat-val" id="d-lat">—</div><div class="stat-lbl">Latence moy</div></div>
+      </div>
+
+      <div class="mode-row">
+        <div class="mode-chip sel" data-mode="get"   onclick="selMode(this)">GET Flood</div>
+        <div class="mode-chip"    data-mode="post"   onclick="selMode(this)">POST Flood</div>
+        <div class="mode-chip"    data-mode="mixed"  onclick="selMode(this)">Méthodes mixtes</div>
+        <div class="mode-chip"    data-mode="slow"   onclick="selMode(this)">Requêtes lentes</div>
+        <div class="mode-chip"    data-mode="head"   onclick="selMode(this)">HEAD Flood</div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">Configuration</div>
+          <div class="field">
+            <label>Serveur cible</label>
+            <select id="dos-preset" onchange="dosPresetChange()">
+              <option value="http://localhost:8080">localhost:8080</option>
+              <option value="http://localhost:4242">localhost:4242</option>
+              <option value="http://localhost:8000/proxy/8080">proxy → :8080 (sans CORS)</option>
+              <option value="http://localhost:8000/proxy/4242">proxy → :4242 (sans CORS)</option>
+              <option value="custom">Personnalisé…</option>
+            </select>
+          </div>
+          <div class="field" id="dos-custom-field" style="display:none">
+            <label>URL personnalisée</label>
+            <input type="text" id="dos-url" value="http://localhost:8080">
+          </div>
+          <div class="field">
+            <label>Chemin</label>
+            <input type="text" id="dos-path" value="/">
+          </div>
+          <div class="field">
+            <label>Workers (threads) <span class="range-label" id="tc-lbl">12</span></label>
+            <input type="range" id="tc" min="1" max="64" value="12"
+                   oninput="document.getElementById('tc-lbl').textContent=this.value">
+          </div>
+          <div class="field">
+            <label>Durée max <span class="range-label" id="td-lbl">15s</span></label>
+            <input type="range" id="td" min="1" max="120" value="15"
+                   oninput="document.getElementById('td-lbl').textContent=this.value+'s'">
+          </div>
+          <div style="display:flex;align-items:center;gap:.8rem;margin-top:.4rem">
+            <button class="btn btn-primary" id="dos-btn" onclick="toggleDos()">▶ Lancer</button>
+            <span class="status-badge status-idle" id="dos-st">Inactif</span>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="padding:.9rem 1rem">
+            <div class="card-title">Requêtes / seconde</div>
+            <canvas class="chart" id="dos-chart" height="140"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="feed-wrap">
+        <div class="feed-head"><div class="feed-dot"></div>Flux en temps réel — toutes les actions</div>
+        <div class="feed-body" id="feed0"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Réseau ═══ -->
+  <div class="section s-hide" id="sec1">
+    <div class="si">
+      <div class="page-title" style="color:var(--blu)">📡 Moniteur Réseau</div>
+
+      <div class="stats-row cols-3" style="margin-bottom:1.2rem">
+        <div class="stat-card"><div class="stat-val" style="color:var(--grn)" id="n-2xx">0</div><div class="stat-lbl">2xx Succès</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--f2)"  id="n-4xx">0</div><div class="stat-lbl">4xx Client</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--red)" id="n-5xx">0</div><div class="stat-lbl">5xx Serveur</div></div>
+      </div>
+
+      <div class="two-col wide">
+        <div>
+          <div class="card">
+            <div class="card-title">Requêtes pré-faites</div>
+            <div class="field" style="margin-bottom:.6rem">
+              <select id="n-req-preset" onchange="applyNetPreset()"></select>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Constructeur de requête</div>
+            <div class="field-row">
+              <div class="field" style="margin-bottom:0">
+                <label>Méthode</label>
+                <select id="n-meth">
+                  <option>GET</option><option>POST</option><option>DELETE</option>
+                  <option>PUT</option><option>PATCH</option><option>OPTIONS</option><option>HEAD</option>
+                </select>
+              </div>
+              <div class="field" style="margin-bottom:0">
+                <label>Serveur</label>
+                <select id="n-host-preset" onchange="netPresetChange()">
+                  <option value="http://localhost:8080">:8080</option>
+                  <option value="http://localhost:4242">:4242</option>
+                  <option value="http://localhost:8000/proxy/8080">proxy :8080</option>
+                  <option value="http://localhost:8000/proxy/4242">proxy :4242</option>
+                  <option value="custom">Autre…</option>
+                </select>
+              </div>
+            </div>
+            <div class="field" id="net-custom-field" style="display:none">
+              <label>URL personnalisée</label>
+              <input type="text" id="n-host" value="http://localhost:8080">
+            </div>
+            <div class="field">
+              <label>Chemin</label>
+              <input type="text" id="n-path" value="/">
+            </div>
+            <div class="field">
+              <label>Headers (clé: valeur, un par ligne)</label>
+              <textarea id="n-hdrs" rows="3" placeholder="Accept: */*&#10;X-Test: 42"></textarea>
+            </div>
+            <div class="field">
+              <label>Body</label>
+              <textarea id="n-body" rows="3" placeholder="Contenu pour POST/PUT…"></textarea>
+            </div>
+            <button class="btn btn-blue btn-full" onclick="sendRequest()">↗ Envoyer la requête</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Historique</div>
+            <div class="hist-list" id="n-hist"></div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">Réponse</div>
+            <div class="rbox" id="n-resp">En attente d'une requête…</div>
+          </div>
+          <div class="card" style="padding:.9rem 1rem">
+            <div class="card-title">Temps de réponse (ms)</div>
+            <canvas class="chart" id="net-chart" height="140"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="feed-wrap">
+        <div class="feed-head"><div class="feed-dot"></div>Flux en temps réel — toutes les actions</div>
+        <div class="feed-body" id="feed1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Injection ═══ -->
+  <div class="section s-hide" id="sec2">
+    <div class="si">
+      <div class="page-title" style="color:var(--pur)">💉 Tests d'Injection</div>
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-title">Catégorie de payload</div>
+            <div class="cat-chips">
+              <div class="cat-chip sel" data-cat="path"  onclick="selCat(this)">Path Traversal</div>
+              <div class="cat-chip"    data-cat="xss"   onclick="selCat(this)">XSS</div>
+              <div class="cat-chip"    data-cat="sql"   onclick="selCat(this)">SQL Injection</div>
+              <div class="cat-chip"    data-cat="cmd"   onclick="selCat(this)">Cmd Injection</div>
+              <div class="cat-chip"    data-cat="ssrf"  onclick="selCat(this)">SSRF</div>
+              <div class="cat-chip"    data-cat="hdr"   onclick="selCat(this)">Header Overflow</div>
+              <div class="cat-chip"    data-cat="crlf"  onclick="selCat(this)">CRLF</div>
+              <div class="cat-chip"    data-cat="uri"   onclick="selCat(this)">URI Longue</div>
+              <div class="cat-chip"    data-cat="null"  onclick="selCat(this)">Null Byte</div>
+              <div class="cat-chip"    data-cat="proto" onclick="selCat(this)">Prototype</div>
+              <div class="cat-chip"    data-cat="enc"   onclick="selCat(this)">Encodage</div>
+              <div class="cat-chip"    data-cat="ovr"   onclick="selCat(this)">Overflow</div>
+            </div>
+            <div class="field">
+              <label>Payload</label>
+              <select id="inj-pl" onchange="pickPayload()"></select>
+            </div>
+            <div class="field">
+              <label>Payload personnalisé</label>
+              <textarea id="inj-custom" rows="3" placeholder="Modifiez ou saisissez votre payload…"></textarea>
+            </div>
+            <div class="field">
+              <label>Cible</label>
+              <select id="inj-preset" onchange="injPresetChange()">
+                <option value="http://localhost:8080">localhost:8080</option>
+                <option value="http://localhost:4242">localhost:4242</option>
+                <option value="http://localhost:8000/proxy/8080">proxy :8080</option>
+                <option value="http://localhost:8000/proxy/4242">proxy :4242</option>
+                <option value="custom">Autre…</option>
+              </select>
+              <input type="text" id="inj-host" style="display:none;margin-top:.5rem">
+            </div>
+            <button class="btn btn-purple btn-full" onclick="runInject()">💉 Tester le payload</button>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">Requête envoyée</div>
+            <div class="rbox" id="inj-req" style="max-height:120px">—</div>
+            <div style="margin-top:1rem" class="card-title">Réponse du serveur</div>
+            <div class="rbox" id="inj-resp" style="max-height:120px">—</div>
+            <div class="verdict" id="inj-verd"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Historique des tests</div>
+            <div class="hist-list" id="inj-hist"></div>
+          </div>
+        </div>
+      </div>
+      <div class="feed-wrap">
+        <div class="feed-head"><div class="feed-dot"></div>Flux en temps réel</div>
+        <div class="feed-body" id="feed2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SSH ═══ -->
+  <div class="section s-hide" id="sec4">
+    <div class="si">
+      <div class="page-title" style="color:var(--teal)">🔑 SSH Brute Force</div>
+      <div style="background:rgba(45,212,191,.07);border:1px solid rgba(45,212,191,.25);border-radius:var(--r);padding:.8rem 1.1rem;margin-bottom:1.4rem;font-size:.82rem;color:rgba(45,212,191,.85);line-height:1.6">
+        ℹ Les navigateurs ne parlent pas SSH (protocole TCP pur). Cet outil <strong>simule visuellement</strong> l'attaque et sonde la connectivité HTTP sur le port cible. Pour un vrai brute-force SSH utilisez <code style="background:var(--bg2);padding:.1rem .3rem;border-radius:3px">hydra -l root -P wordlist.txt ssh://cible</code>.
+      </div>
+
+      <div class="stats-row cols-3" style="margin-bottom:1.2rem">
+        <div class="stat-card"><div class="stat-val" style="color:var(--teal)" id="ssh-att">0</div><div class="stat-lbl">Tentatives</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--grn)"  id="ssh-hit">0</div><div class="stat-lbl">Réponses</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--red)"  id="ssh-fail">0</div><div class="stat-lbl">Refusés</div></div>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-title">Configuration</div>
+            <div class="field-row">
+              <div class="field" style="margin-bottom:0">
+                <label>Hôte cible</label>
+                <input type="text" id="ssh-host" value="127.0.0.1">
+              </div>
+              <div class="field" style="margin-bottom:0">
+                <label>Port</label>
+                <input type="number" id="ssh-port" value="22">
+              </div>
+            </div>
+            <div class="field" style="margin-top:.8rem">
+              <label>Utilisateurs (un par ligne)</label>
+              <textarea id="ssh-users" rows="5" style="font-size:.75rem">root
+admin
+ubuntu
+user
+pi
+git
+postgres
+mysql
+deploy
+www-data</textarea>
+            </div>
+            <div class="field">
+              <label>Mots de passe (un par ligne)</label>
+              <textarea id="ssh-passes" rows="5" style="font-size:.75rem">admin
+password
+123456
+root
+toor
+pass
+qwerty
+letmein
+changeme
+welcome</textarea>
+            </div>
+            <div class="field">
+              <label>Délai entre tentatives <span class="range-label" id="ssh-delay-lbl">80ms</span></label>
+              <input type="range" id="ssh-delay" min="10" max="2000" value="80"
+                     oninput="document.getElementById('ssh-delay-lbl').textContent=this.value+'ms'">
+            </div>
+            <div style="display:flex;align-items:center;gap:.8rem">
+              <button class="btn btn-teal" id="ssh-btn" onclick="toggleSsh()">▶ Lancer</button>
+              <span class="status-badge status-idle" id="ssh-st">Inactif</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">Credential en cours</div>
+            <div class="ssh-current" id="ssh-current">—</div>
+            <div class="card-title" style="margin-top:1rem">Journal</div>
+            <div class="ssh-log" id="ssh-log"></div>
+          </div>
+          <div class="card" style="margin-top:0">
+            <div class="card-title">✅ Réponses positives</div>
+            <div class="ssh-found" id="ssh-found">Aucune pour l'instant</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feed-wrap">
+        <div class="feed-head"><div class="feed-dot"></div>Flux en temps réel</div>
+        <div class="feed-body" id="feed4"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Pong ═══ -->
+  <div class="section s-hide" id="sec3">
+    <div class="si">
+      <div class="page-title" style="color:var(--f2)">🏓 Pong 3D</div>
+      <div class="pong-wrap">
+        <div>
+          <div style="width:100%;max-width:560px">
+            <canvas id="pong-canvas" width="560" height="420" style="width:100%;height:auto"></canvas>
+            <button onclick="pausePong()" style="margin-top:.6rem;width:100%;padding:.55rem;background:none;border:1px solid var(--f1);color:var(--f2);border-radius:6px;font-family:inherit;font-size:.85rem;cursor:pointer" id="pong-pause-btn">
+              ▶ Démarrer
+            </button>
+          </div>
+        </div>
+        <div>
+          <div class="pscore" id="p-score">0 — 0</div>
+          <div class="pinfo"  id="p-info">Tape / Espace pour démarrer</div>
+          <div class="card">
+            <div class="card-title">Difficulté IA</div>
+            <input type="range" id="p-diff" min="1" max="10" value="5" style="width:100%;accent-color:var(--f1)">
+            <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-top:.3rem">
+              <span>Facile</span><span>Expert</span>
+            </div>
+          </div>
+          <div class="card" style="margin-top:.8rem">
+            <div class="card-title">🏆 Classement</div>
+            <div id="p-lb"></div>
+          </div>
+          <button class="btn btn-outline btn-full btn-sm" style="margin-top:.8rem" onclick="resetPong()">Nouvelle partie</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Fichiers ═══ -->
+  <div class="section s-hide" id="sec6">
+    <div class="si">
+      <div class="page-title" style="color:var(--grn)">📁 Upload &amp; Download</div>
+
+      <!-- Serveur cible -->
+      <div class="card">
+        <div class="card-title">Serveur cible</div>
+        <div class="field-row">
+          <div class="field" style="margin-bottom:0">
+            <select id="f-host-preset" onchange="filesPresetChange()">
+              <option value="http://localhost:8080">localhost:8080</option>
+              <option value="http://localhost:4242">localhost:4242</option>
+              <option value="custom">Autre…</option>
+            </select>
+          </div>
+          <div class="field" id="f-host-custom-field" style="display:none;margin-bottom:0">
+            <input type="text" id="f-host-custom" value="http://localhost:8080">
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+
+        <!-- Upload -->
+        <div class="card">
+          <div class="card-title">⬆ Upload</div>
+
+          <!-- Zone drag & drop -->
+          <div class="dropzone" id="f-dropzone"
+               ondragover="fileDragOver(event)" ondragleave="fileDragLeave()" ondrop="fileDrop(event)">
+            <div style="font-size:2rem;margin-bottom:.4rem">📂</div>
+            <div style="font-size:.82rem">Glisser un fichier ici</div>
+          </div>
+          <input type="file" id="f-upload-input" style="display:none" onchange="fileInputChange()">
+
+          <!-- Fichier sélectionné — affiché EN DEHORS de la zone -->
+          <div id="f-selected" style="display:none;margin-top:.7rem;padding:.6rem .9rem;
+               background:var(--bg);border:1px solid var(--grn);border-radius:6px;
+               font-size:.82rem;display:none;align-items:center;gap:.6rem">
+            <span style="font-size:1.1rem">📄</span>
+            <div style="flex:1;overflow:hidden">
+              <div id="f-file-name" style="font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+              <div id="f-file-size" style="color:var(--muted);font-size:.72rem"></div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('f-upload-input').click()">Changer</button>
+          </div>
+          <div id="f-no-file" style="margin-top:.7rem">
+            <button class="btn btn-outline btn-full" onclick="document.getElementById('f-upload-input').click()">📎 Choisir un fichier</button>
+          </div>
+
+          <div class="field" style="margin-top:.8rem">
+            <label>Chemin de destination sur le serveur</label>
+            <input type="text" id="f-upload-path" value="/upload" placeholder="/upload">
+          </div>
+          <div style="font-size:.74rem;color:var(--muted);margin-bottom:.6rem" id="f-upload-url">→ POST http://localhost:8080/upload</div>
+          <div class="progress-bar"><div id="f-upload-bar"></div></div>
+          <button class="btn btn-primary btn-full" onclick="uploadFile()">⬆ Envoyer au serveur</button>
+
+          <!-- Réponse serveur -->
+          <div style="margin-top:.8rem">
+            <div class="card-title">Réponse serveur</div>
+            <div class="rbox" id="f-upload-resp" style="max-height:100px;font-size:.75rem">—</div>
+          </div>
+        </div>
+
+        <!-- Download -->
+        <div class="card">
+          <div class="card-title">⬇ Download</div>
+          <div class="field">
+            <label>Chemin du fichier sur le serveur</label>
+            <input type="text" id="f-dl-path" value="/" placeholder="/fichier.txt">
+          </div>
+          <div class="field">
+            <label>Nom de sauvegarde (optionnel)</label>
+            <input type="text" id="f-dl-name" placeholder="fichier.txt">
+          </div>
+          <button class="btn btn-teal btn-full" onclick="downloadFile()">⬇ Télécharger</button>
+          <div id="f-dl-msg" style="margin-top:.6rem;font-size:.78rem;min-height:1rem"></div>
+
+          <div style="margin-top:1.2rem" class="card-title">Historique</div>
+          <div class="hist-list" id="f-hist"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Math / Chiffre d'or ═══ -->
+  <div class="section s-hide" id="sec5">
+    <div class="si">
+      <div class="page-title" style="color:var(--f2)">📐 Constantes &amp; Chiffre d'or</div>
+
+      <!-- Constantes -->
+      <div class="card">
+        <div class="card-title">Constantes mathématiques</div>
+        <div class="const-grid">
+          <div class="const-card">
+            <div class="const-sym">φ</div>
+            <div class="const-val">1.6180339887 4989484820 4586834365...</div>
+            <div class="const-name">Nombre d'or (Phi)</div>
+          </div>
+          <div class="const-card">
+            <div class="const-sym">1/φ</div>
+            <div class="const-val">0.6180339887 4989484820 4586834365...</div>
+            <div class="const-name">Inverse de φ (= φ − 1)</div>
+          </div>
+          <div class="const-card">
+            <div class="const-sym">φ²</div>
+            <div class="const-val">2.6180339887 4989484820 4586834365...</div>
+            <div class="const-name">Carré de φ (= φ + 1)</div>
+          </div>
+          <div class="const-card">
+            <div class="const-sym">π</div>
+            <div class="const-val">3.1415926535 8979323846 2643383279...</div>
+            <div class="const-name">Pi — rapport circonférence/diamètre</div>
+          </div>
+          <div class="const-card">
+            <div class="const-sym">e</div>
+            <div class="const-val">2.7182818284 5904523536 0287471352...</div>
+            <div class="const-name">Nombre d'Euler — base ln</div>
+          </div>
+          <div class="const-card">
+            <div class="const-sym">√2</div>
+            <div class="const-val">1.4142135623 7309504880 1688724209...</div>
+            <div class="const-name">Racine de 2 — diagonale du carré</div>
+          </div>
+          <div class="const-card">
+            <div class="const-sym">√3</div>
+            <div class="const-val">1.7320508075 6887729352 7446341505...</div>
+            <div class="const-name">Racine de 3 — hauteur triangle équilatéral</div>
+          </div>
+          <div class="const-card">
+            <div class="const-sym">√5</div>
+            <div class="const-val">2.2360679774 9978969640 9173668731...</div>
+            <div class="const-name">Racine de 5 — base de φ = (1+√5)/2</div>
+          </div>
+        </div>
+        <div style="font-size:.75rem;color:var(--muted);font-family:'Courier New',monospace;padding:.5rem .2rem">
+          φ = (1 + √5) / 2 &nbsp;|&nbsp; 1/φ = φ − 1 &nbsp;|&nbsp; φ² = φ + 1 &nbsp;|&nbsp; φ = 2·cos(π/5)
+        </div>
+      </div>
+
+      <!-- Calculateur section dorée -->
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-title">Calculateur — Section dorée</div>
+            <div class="field">
+              <label>Ma mesure est le…</label>
+              <select id="m-mode">
+                <option value="total">Total (a + b)</option>
+                <option value="major">Segment majeur  a  (= total / φ)</option>
+                <option value="minor">Segment mineur  b  (= total / φ²)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Valeur</label>
+              <input type="number" id="m-input" placeholder="ex: 100" min="0" step="any"
+                     style="font-size:1rem;font-weight:600">
+            </div>
+            <div id="m-result-area" style="display:none">
+              <div class="result-grid">
+                <div class="result-box">
+                  <div class="rv" id="m-total">—</div>
+                  <div class="rl">Total (a + b)</div>
+                </div>
+                <div class="result-box">
+                  <div class="rv" style="color:var(--f1)" id="m-major">—</div>
+                  <div class="rl">Majeur a&nbsp;(61.8%)</div>
+                </div>
+                <div class="result-box">
+                  <div class="rv" style="color:var(--grn)" id="m-minor">—</div>
+                  <div class="rl">Mineur b&nbsp;(38.2%)</div>
+                </div>
+              </div>
+              <div class="golden-bar">
+                <div class="bar-major" id="m-bar-major" style="width:61.8%"></div>
+                <div class="bar-minor" id="m-bar-minor" style="width:38.2%"></div>
+              </div>
+              <div style="font-size:.72rem;color:var(--muted);text-align:center" id="m-pct">61.800% — 38.200%</div>
+              <div style="margin-top:.8rem;font-size:.78rem;display:flex;flex-direction:column;gap:.3rem">
+                <div style="display:flex;justify-content:space-between">
+                  <span style="color:var(--muted)">total / majeur</span>
+                  <span style="font-family:'Courier New',monospace;color:var(--f2)" id="m-r1">—</span>
+                </div>
+                <div style="display:flex;justify-content:space-between">
+                  <span style="color:var(--muted)">majeur / mineur</span>
+                  <span style="font-family:'Courier New',monospace;color:var(--f2)" id="m-r2">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">Rapports avec les constantes</div>
+            <div id="m-table" style="max-height:340px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Suite de Fibonacci -->
+      <div class="card">
+        <div class="card-title">Suite de Fibonacci — convergence vers φ</div>
+        <div style="font-size:.74rem;color:var(--muted);margin-bottom:.8rem">
+          Le rapport F(n+1)/F(n) converge vers φ. La suite : 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144…
+        </div>
+        <div id="m-fib-table" style="max-height:280px;overflow-y:auto"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ SPLIT 2×2 ═══ -->
+  <div id="split">
+    <div class="sp-pane">
+      <div class="sp-head" style="color:var(--red)">⚡ DoS</div>
+      <div class="sp-body">
+        <div class="stats-row cols-2" style="margin-bottom:.8rem">
+          <div class="stat-card"><div class="stat-val" style="color:var(--red)" id="sp-rps">0</div><div class="stat-lbl">Req/s</div></div>
+          <div class="stat-card"><div class="stat-val" id="sp-tot">0</div><div class="stat-lbl">Total</div></div>
+        </div>
+        <div class="stats-row cols-2" style="margin-bottom:.8rem">
+          <div class="stat-card"><div class="stat-val" style="color:var(--red)" id="sp-err">0</div><div class="stat-lbl">Erreurs</div></div>
+          <div class="stat-card"><div class="stat-val" id="sp-lat">—</div><div class="stat-lbl">Ms moy</div></div>
+        </div>
+        <canvas id="sp-chart" style="width:100%;height:80px;display:block;border-radius:4px"></canvas>
+        <div class="feed-body" id="sp-feed" style="margin-top:.6rem;max-height:100px"></div>
+      </div>
+    </div>
+    <div class="sp-pane">
+      <div class="sp-head" style="color:var(--blu)">📡 Réseau</div>
+      <div class="sp-body">
+        <div class="stats-row cols-3" style="margin-bottom:.8rem">
+          <div class="stat-card"><div class="stat-val" style="color:var(--grn)" id="sp-2xx">0</div><div class="stat-lbl">2xx</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:var(--f2)"  id="sp-4xx">0</div><div class="stat-lbl">4xx</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:var(--red)" id="sp-5xx">0</div><div class="stat-lbl">5xx</div></div>
+        </div>
+        <div class="rbox" id="sp-resp" style="max-height:100px;font-size:.72rem">—</div>
+        <div class="feed-body" id="sp-feed-net" style="margin-top:.6rem;max-height:80px"></div>
+      </div>
+    </div>
+    <div class="sp-pane">
+      <div class="sp-head" style="color:var(--pur)">💉 Injection</div>
+      <div class="sp-body">
+        <div class="rbox" id="sp-inj" style="max-height:90px;font-size:.72rem;margin-bottom:.6rem">—</div>
+        <div id="sp-verd" style="font-size:.78rem;margin-bottom:.6rem"></div>
+        <div class="hist-list" id="sp-inj-hist" style="max-height:100px"></div>
+      </div>
+    </div>
+    <div class="sp-pane">
+      <div class="sp-head" style="color:var(--f2)">🏓 Pong <span id="sp-score" style="margin-left:.5rem;font-weight:700">0 — 0</span></div>
+      <div class="sp-body" style="display:flex;flex-direction:column;gap:.5rem;padding:.5rem">
+        <div style="width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:4px;border:1px solid var(--f1)">
+          <canvas id="pong-mini" width="320" height="240" style="width:100%;height:100%;display:block"></canvas>
+        </div>
+        <div style="font-size:.68rem;font-weight:600;color:var(--muted);letter-spacing:.06em">DÉCISIONS IA</div>
+        <div id="sp-ai-log" style="font-size:.68rem;font-family:'Courier New',monospace;overflow-y:auto;flex:1;"></div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /persp -->
+</div><!-- /app -->
+
+<!-- Ordre de chargement : globals → embers → eventbus → auth → navigation → chart → modules → init -->
+<script src="js/globals.js"></script>
+<script src="js/embers.js"></script>
+<script src="js/eventbus.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/dos.js"></script>
+<script src="js/network.js"></script>
+<script src="js/injection.js"></script>
+<script src="js/ssh.js"></script>
+<script src="js/pong.js"></script>
+<script src="js/math.js"></script>
+<script src="js/files.js"></script>
+<script src="js/init.js"></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Non Trouvée</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:wght@400;700&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #FFEB00 0%, #FC0019 20%, #01FF4F 40%, #FF01D7 60%, #5600CC 80%, #00EDF5 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            font-family: 'Playfair Display', serif;
+            color: #fff;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 6rem;
+            text-align: center;
+            margin: 0 0 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: pulse404 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse404 {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        p {
+            font-size: 1.8rem;
+            text-align: center;
+            margin: 0 0 40px 0;
+            max-width: 600px;
+            padding: 0 20px;
+            opacity: 0.9;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 20px;
+        }
+        
+        a {
+            padding: 15px 30px;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        a:hover {
+            background: rgba(255,255,255,0.4);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        
+        .davinci-spiral {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            top: 10%;
+            right: 10%;
+            animation: spiralRotate 25s linear infinite;
+        }
+        
+        .davinci-spiral::before {
+            content: '';
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
+            top: 50px;
+            left: 50px;
+            animation: spiralRotate 20s linear infinite reverse;
+        }
+        
+        @keyframes spiralRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 4rem; }
+            p { font-size: 1.4rem; }
+            .buttons { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="davinci-spiral"></div>
+    <h1>404</h1>
+    <p>Oups ! La page s'est égarée dans un labyrinthe de Da Vinci psychédélique. Retournez à l'accueil pour explorer l'univers.</p>
+    <div class="buttons">
+        <a href="../index.html">Accueil</a>
+        <a href="javascript:history.back()">Page Précédente</a>
+    </div>
+</body>
+</html>

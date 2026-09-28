@@ -1,0 +1,284 @@
+================================================================================
+                     RESUME DU DOSSIER PARSING - WEBSERV 42
+================================================================================
+
+--------------------------------------------------------------------------------
+1. Validation.cpp
+--------------------------------------------------------------------------------
+
+  checkObjet(obj, s, i, depth)
+    Verifie recursivement que les accolades (ou tout autre paire de caracteres
+    obj[0]/obj[1]) sont correctement equilibrees dans la chaine s.
+    - obj doit faire exactement 2 caracteres : obj[0]=ouvrant, obj[1]=fermant.
+    - depth augmente a chaque ouvrant, diminue a chaque fermant.
+    - Retourne true si depth == 0 quand on atteint la fin de la chaine.
+    - Retourne false si un fermant est rencontre alors que depth == 0 (surplus).
+    Utilisee par ConfParser::validaterServers pour valider les blocs server {}.
+
+--------------------------------------------------------------------------------
+2. ConfParser.cpp
+--------------------------------------------------------------------------------
+
+  splitServerBrace(tokens)
+    Prend un vecteur de tokens bruts et isole les caracteres speciaux '{', '}'
+    et ';' en tokens independants, meme s'ils sont colles a d'autres mots.
+    Exemple : "listen:8080;" -> ["listen:8080", ";"]
+    Retourne un nouveau VEC_STR avec les separateurs isoles.
+
+  getServersConf(conf_path)
+    Point d'entree principal du parsing.
+    1. Lit le fichier de config via ReadFile.
+    2. Tokenise via splitServerBrace.
+    3. Parcourt les tokens : attend le mot "server" puis un bloc { ... }.
+    4. Cree un ServerConf vide, remplit son vect_string_config_, appelle create().
+    5. Verifie qu'au moins 1 bloc server existe.
+    6. Appelle validaterServers() puis createServerValid().
+    Retourne un ServersConf complet et valide.
+    Lance std::runtime_error si la syntaxe est incorrecte.
+
+  checkNoNestedServer(tokens)
+    Parcourt les tokens d'un bloc server et s'assure que le mot "server"
+    n'apparait nulle part a l'interieur (pas de server imbrique).
+    Lance std::runtime_error si "server" est trouve.
+
+  validaterServers(servers)
+    Pour chaque ServerConf parse :
+    - Appelle checkNoNestedServer.
+    - Reconstruit une chaine depuis les tokens et appelle Validation::checkObjet
+      pour s'assurer que les accolades {} sont bien equilibrees.
+    Lance std::runtime_error en cas d'anomalie.
+
+--------------------------------------------------------------------------------
+3. RouteConf.cpp  (classe de base pour ServerConf et LocationConf)
+--------------------------------------------------------------------------------
+
+  Setters (setRoot, setIndex, setMethods, setUploadStore, setReturnDirective,
+           setCgiExtensions, setErrorPages, setClientMaxBodySize, setAutoIndex)
+    Affectent les membres prives correspondants.
+    Appelables uniquement depuis les classes derivees (protected).
+
+  addErrorPage(code, path)
+    Ajoute une entree dans la map error_pages : code HTTP -> chemin de la page.
+
+  collectUntilSemi(tokens, i, ctx)
+    Lit les tokens depuis la position i jusqu'au ';' (exclu).
+    Lance une erreur si la valeur est absente ou si le ';' est manquant.
+    Retourne le vecteur de valeurs collectees et avance i apres le ';'.
+
+  parseSize(val)
+    Convertit une chaine de taille ("10m", "512k", "1g", "1024") en octets.
+    Gere les suffixes m/k/g (minuscules). Lance une erreur si val est vide.
+
+  parseDirective(tokens, i)
+    Dispatcher des directives communes a server et location :
+      root, upload_store, index, methods, autoindex, client_max_body_size,
+      error_page, return, cgi_handler.
+    Retourne true si la directive a ete traitee, false sinon (directive inconnue).
+    Avance l'index i au-dela des tokens de la directive traitee.
+
+  Getters (getRoot, getIndex, getMethods, getUploadStore, getReturnDirective,
+           getCgiExtnesions, getErrorPages, getClientMaxBodySize, getAutoIndex)
+    Retournent les membres prives correspondants (const).
+
+--------------------------------------------------------------------------------
+4. ServerConf.cpp
+--------------------------------------------------------------------------------
+
+  ServerConf()
+    Constructeur : initialise bool_resu_total_ a false.
+
+  serverClear()
+    Vide server_name_, vect_string_config_, listeners_, locations_.
+
+  getVectStr() / getServerName() / getListen() / getListeners() / getLocation()
+    Accesseurs publics. getListen() retourne le premier listener ou ("",80)
+    si la liste est vide.
+
+  boolNameServer(name)
+    Retourne true si 'name' est present dans server_name_.
+    Utilise earch() (recherche lineaire dans un vecteur).
+
+  parseListen(tokens, i)
+    Parse la directive "listen" : accepte "port" ou "host:port".
+    Valide que le port est dans [1..65535].
+    Ajoute un PAIR_LISTENER dans listeners_.
+
+  parseServerName(tokens, i)
+    Parse la directive "server_name" : accepte plusieurs noms sur une ligne.
+    Ajoute les noms dans server_name_.
+
+  parseCharset(tokens, i)
+    Parse "charset" : valeurs acceptees : utf-8, iso-8859-1, iso-8859-15, off.
+
+  parseEtag(tokens, i)
+    Parse "etag" : valeurs acceptees : on, off.
+
+  parseServerTokens(tokens, i)
+    Parse "server_tokens" : valeurs acceptees : on, off, build.
+
+  parseDisableSymlinks(tokens, i)
+    Parse "disable_symlinks" : valeurs acceptees : on, off, if_not_owner.
+
+  parseLocation(tokens, i)
+    Extrait le chemin de la location et le bloc { ... } correspondant.
+    Cree un LocationConf, appelle loc.parse() et l'ajoute a locations_.
+
+  skipDirective(tokens, i)
+    Ignore une directive inconnue (logue une erreur mais ne plante pas).
+    Si la directive est suivie d'un bloc {}, saute tout le bloc.
+    Sinon saute jusqu'au prochain ';'.
+
+  create()
+    Parcourt vect_string_config_ et dispatche chaque directive vers le bon
+    parseur (parseListen, parseServerName, parseLocation, parseDirective, ...).
+    Met bool_resu_total_ a true a la fin.
+    La configuration est invalide tant que create() n'a pas ete appelee.
+
+--------------------------------------------------------------------------------
+5. LocationConf.cpp
+--------------------------------------------------------------------------------
+
+  parseMethods(tokens, i)
+    Parse la directive "methods" : valide que chaque methode est parmi
+    GET, POST, DELETE, PUT, HEAD, OPTIONS, PATCH.
+    Appelle setMethods().
+
+  parseReturn(tokens, i)
+    Parse la directive "return" : accepte "code" ou "code chemin".
+    Valide que le code est dans [100..599].
+    Pour un code 3xx, le chemin est obligatoire.
+    Appelle setReturnDirective().
+
+  parse(path, tokens)
+    Point d'entree du parsing d'une location.
+    Enregistre path_ et vec_str_, puis parcourt les tokens :
+      - "methods" -> parseMethods
+      - "return"  -> parseReturn
+      - directives communes -> parseDirective (heritee de RouteConf)
+      - directives inconnues -> stockees dans directives_ (map cle -> valeurs)
+
+  getPath()
+    Retourne le chemin de la location (ex: "/", "/upload", "/cgi-bin").
+
+  getDirective(key)
+    Retourne les valeurs d'une directive stockee dans directives_.
+    Lance une erreur si la cle n'existe pas.
+
+  getRoot() / getAutoindex()
+    Delegation vers RouteConf::getRoot() / RouteConf::getAutoIndex().
+
+  getRedirectCode()
+    Extrait et retourne le code numerique de la directive return (ou 0).
+
+  getRedirectPath()
+    Extrait et retourne le chemin de la directive return (ou chaine vide).
+
+--------------------------------------------------------------------------------
+6. ServersConf.cpp
+--------------------------------------------------------------------------------
+
+  ServersConf()
+    Constructeur : initialise nbServer_ a 0.
+
+  getServers()
+    Retourne la reference const sur le vecteur de tous les ServerConf.
+
+  getServer(SIZET s)
+    Retourne le ServerConf a l'index 1-base s (1 = premier).
+    Lance une erreur si s est hors bornes.
+
+  getServer(STR s)
+    Retourne le ServerConf dont le server_name contient s.
+    Lance une erreur si aucun serveur ne correspond.
+
+  earchServer(s)
+    Recherche lineaire dans servers_ d'un serveur dont boolNameServer(s) == true.
+    Retourne l'index 0-base ou -1 si non trouve.
+
+  getNbServer()
+    Retourne le nombre de blocs server enregistres.
+
+  createServerVide()
+    Ajoute un ServerConf() vide dans servers_ et incremente nbServer_.
+    Appele par ConfParser avant de remplir vect_string_config_.
+
+  createServerValid()
+    Validation semantique de tous les serveurs apres parsing :
+    1. Verifie que bool_resu_total_ == true (create() a ete appelee).
+    2. Verifie que listeners_ n'est pas vide (au moins une directive listen).
+    3. Detecte les doublons (meme port + meme server_name).
+    Lance std::runtime_error si une de ces conditions n'est pas respectee.
+
+  add(vs)
+    Cree un ServerConf a la volee depuis un vecteur de tokens, appelle create()
+    et l'ajoute a servers_. Methode utilitaire (usage interne/tests).
+
+================================================================================
+                       REGLES DE VALIDATION
+================================================================================
+
+--- VALIDATION D'UN SERVEUR (strict minimum) ---
+
+Un bloc server est considere VALIDE si et seulement si :
+
+  1. bool_resu_total_ == true
+       => La methode create() a ete executee jusqu'a la fin sans exception.
+
+  2. listeners_ n'est pas vide
+       => Au moins une directive "listen <port>;" est presente.
+
+  Ces deux conditions sont verifiees par ServersConf::createServerValid().
+
+Un serveur INVALIDE provoque une std::runtime_error qui interrompt le demarrage.
+
+Champs optionnels (non bloquants si absents) :
+  - server_name  : si absent, le serveur repond a toute requete sur son port
+  - root         : si absent, le serveur utilise le root par defaut
+  - index        : si absent, aucune page d'index automatique
+  - error_page   : si absent, pages d'erreur generiques du serveur
+  - client_max_body_size : si absent, valeur par defaut (0 = illimite)
+  - locations    : si absentes, aucune route configuree (404 sur tout)
+
+--- VALIDATION D'UNE LOCATION ---
+
+Une location est syntaxiquement valide si :
+
+  1. Elle a un chemin (ex: "/", "/upload", "/cgi-bin").
+       => Le chemin doit etre present entre "location" et "{".
+
+  2. Son bloc { ... } est correctement ferme.
+       => Verifiee par depth tracking dans parseLocation().
+
+  3. Chaque directive a l'interieur est syntaxiquement correcte :
+       - methods : valeurs dans {GET, POST, DELETE, PUT, HEAD, OPTIONS, PATCH}
+       - return  : "code" ou "code chemin", code dans [100..599]
+       - autoindex : "on" ou "off"
+       - client_max_body_size : valeur numerique optionnellement suffixee (k/m/g)
+       - error_page : exactement 2 valeurs (code + chemin)
+       - root / index / upload_store / cgi_handler : syntaxe standard
+
+Champs strictement requis pour qu'une location soit exploitable :
+  - route (path_) : le prefixe de chemin
+  Tous les autres champs ont des valeurs par defaut ou sont herites du serveur.
+
+--- ALGORITHME DE ROUTAGE (getRouteData) ---
+
+  Etape 1 - Server match :
+    Parcourt all_servers, cherche un port correspondant.
+    Premier serveur sur ce port = serveur par defaut.
+    Serveur dont server_name == Host header = serveur exact.
+    Si aucun port ne correspond => RouteData vide (500).
+
+  Etape 2 - Location match (longest prefix + boundary check nginx-style) :
+    Parcourt les locations du serveur selectionne.
+    Garde la location dont le prefixe est le plus long et qui respecte
+    la contrainte de frontiere :
+      path == route  OU  path[route.size()] == '/'  OU  route se termine par '/'
+    Si aucune location ne correspond => RouteData vide (404).
+
+  Etape 3 - Remplissage RouteData :
+    Copie les pointeurs du serveur et de la location dans RouteData.
+    client_max_body_size : la valeur de la location ecrase celle du serveur
+    si elle n'est pas SIZET_MAX (valeur sentinelle = "non defini").
+
+================================================================================

@@ -1,0 +1,7 @@
+# Ignore local environment and secrets
+/srcs/.env
+/secrets/
+
+# Ignore any other sensitive or OS files
+.DS_Store
+*.log

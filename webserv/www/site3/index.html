@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>La Boucherie du Chef</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #fff5f0; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #8b0000; text-align: center; }
+        .viande { background: white; border-radius: 10px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { color: #b22222; }
+    </style>
+</head>
+<body>
+    <h1>La Boucherie du Chef</h1>
+    <div class="viande">
+        <h2>Entrecote de Boeuf</h2>
+        <p>Piece noble grillee, persilee et savoureuse. Cuisson saignante recommandee.</p>
+    </div>
+    <div class="viande">
+        <h2>Filet de Poulet</h2>
+        <p>Viande maigre et polyvalente, ideale pour une alimentation equilibree.</p>
+    </div>
+    <div class="viande">
+        <h2>Cotes d'Agneau</h2>
+        <p>Tendres et parfumees, grillees avec du romarin et de l'ail.</p>
+    </div>
+    <script>
+        document.cookie = "viande_client_visite=true; path=/; max-age=3600";
+        document.cookie = "viande_client_favori=entrecote; path=/; max-age=3600";
+    </script>
+    <p><em>Cookies client poses : viande_client_visite, viande_client_favori</em></p>
+    <p><a href="/cgi-bin/set_cookie.py">Poser les cookies serveur</a></p>
+</body>
+</html>

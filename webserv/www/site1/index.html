@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Le Monde des Bonbons</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #fff0f5; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #e91e8c; text-align: center; }
+        .candy { background: white; border-radius: 10px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { color: #ff6b9d; }
+    </style>
+</head>
+<body>
+    <h1>Le Monde des Bonbons</h1>
+    <div class="candy">
+        <h2>Haribo</h2>
+        <p>Les oursons en gelatine, un classique intemporel depuis 1920.</p>
+    </div>
+    <div class="candy">
+        <h2>Carambar</h2>
+        <p>Le caramel allonge avec ses blagues legendaires.</p>
+    </div>
+    <div class="candy">
+        <h2>Fraises Tagada</h2>
+        <p>Les petites fraises en sucre roses qui fondent dans la bouche.</p>
+    </div>
+    <script>
+        document.cookie = "bonbons_client_visite=true; path=/; max-age=3600";
+        document.cookie = "bonbons_client_favori=carambar; path=/; max-age=3600";
+    </script>
+    <p><em>Cookies client poses : bonbons_client_visite, bonbons_client_favori</em></p>
+    <p><a href="/cgi-bin/set_cookie.py">Poser les cookies serveur</a></p>
+</body>
+</html>

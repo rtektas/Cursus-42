@@ -1,0 +1,4 @@
+1. `http://127.0.0.1:8080/` — show headers in Network tab
+2. `http://127.0.0.1:8080/doesnotexist` — show custom 404 page
+3. `http://127.0.0.1:8080/uploads/` — show no directory listing or shows with autoindex
+4. `http://127.0.0.1:8080/redirect` — show browser following 301 to `/`

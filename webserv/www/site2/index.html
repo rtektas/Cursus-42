@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Le Jardin des Legumes</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0fff0; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #2e8b57; text-align: center; }
+        .legume { background: white; border-radius: 10px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { color: #3cb371; }
+    </style>
+</head>
+<body>
+    <h1>Le Jardin des Legumes</h1>
+    <div class="legume">
+        <h2>Carotte</h2>
+        <p>Riche en beta-carotene, excellente crue ou cuite. Bonne pour la vue.</p>
+    </div>
+    <div class="legume">
+        <h2>Brocoli</h2>
+        <p>Un super-aliment plein de vitamines C et K, ideal a la vapeur.</p>
+    </div>
+    <div class="legume">
+        <h2>Courgette</h2>
+        <p>Legume d'ete par excellence, parfait en gratin ou en ratatouille.</p>
+    </div>
+    <script>
+        document.cookie = "legumes_client_visite=true; path=/; max-age=3600";
+        document.cookie = "legumes_client_favori=carotte; path=/; max-age=3600";
+    </script>
+    <p><em>Cookies client poses : legumes_client_visite, legumes_client_favori</em></p>
+    <p><a href="/cgi-bin/set_cookie.py">Poser les cookies serveur</a></p>
+</body>
+</html>
