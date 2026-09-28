@@ -1,0 +1,23 @@
+#ifndef ANIMAL_HPP
+#define ANIMAL_HPP
+
+#include <iostream>
+#include <string>
+
+class Animal
+{
+protected:
+    std::string type;
+
+public:
+    Animal();
+    Animal(const Animal& other);
+    Animal& operator=(const Animal& other);
+    virtual ~Animal(); // virtuel pour delete via pointeur de base
+
+    std::string getType() const;
+
+    virtual void makeSound() const; // virtuel pour le polymorphisme
+};
+
+#endif
